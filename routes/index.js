@@ -7,7 +7,7 @@ var imgSize = require('image-size'),
     downloader = require('./downloader.js');
 
 exports.index = function indexHandle(req, res) {
-    var domain = 'http://www.lolcats.com',
+    var domain = 'http://www.cnn.com',
         dirParts = [process.cwd(), 'public', 'images'],
         downloadDir = dirParts.join(path.sep),
         host = url.parse(domain),
@@ -31,21 +31,12 @@ exports.index = function indexHandle(req, res) {
                 imageURLs = [];
             parsedHTML('img').map(function(i, hello) {
                 var href = $(hello).attr('src');
-                console.log("Is valid URL : ", isValidURL(href));
-                // TODO :
-                // Fix issue where duplicate files make it into array
+                href = hasProtocol(domain, href);
                 if (imageURLs.indexOf(href) === -1) {
-                    console.log("HREF : ", href);
-                    if (isValidURL(href) && href.substr(0,1) === 'h') {
-                        imageURLs.push(href);
-                    } else {
-                        if (isValidURL(domain + href)) {
-                            imageURLs.push(domain + href);
-                        }
-                        console.log("Can\'t Validate URL : ", href);
-                    }
+                    imageURLs.push(href);
                 }
             });
+            console.dir(imageURLs);
             downloader(imageURLs, dirName, function(err, success) {
                 if (err) {
                     console.error(err);
@@ -58,8 +49,11 @@ exports.index = function indexHandle(req, res) {
     }
 };
 
-function isValidURL(){ 
-  return /((http|https):\/\/(\w+:{0,1}\w*@)?(\S+)|)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/.test(isValidURL.arguments[0]); 
+function hasProtocol(domain, href) {
+    if (href.substr(0,1) !== 'h') {
+        return domain + href;
+    }
+    return href;
 }
 
 

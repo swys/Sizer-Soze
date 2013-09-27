@@ -10,6 +10,7 @@
     "jade": "*",
     "image-size": "~0.1.5",
     "request": "~2.27.0",
-    "cheerio": "~0.12.2"
+    "cheerio": "~0.12.2",
+    "watercolor": "0.0.2"
   }
 }

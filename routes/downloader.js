@@ -2,8 +2,14 @@
 	fs = require('fs'),
 	path = require('path'),
 	urlFormat = require('url'),
-	fileCount = 0,
-	finished = [];
+	watercolor = require('watercolor'),
+	errStream = watercolor({
+		color : 'red'
+	}),
+	successStream = watercolor({
+		color : 'green'
+	}),
+	fileCount = 0;
 	
 // TODO :
 // Need to add a directory for every site queried
@@ -15,7 +21,8 @@ module.exports = function downloader(urlList, dirName, cb) {
 			flags: 'w',
 			encoding: null,
 			mode: 0666
-		};
+		},
+		finCount = urlList.length;
 
 	urlList.forEach(function(url) {
 		download(url, _cb);
@@ -30,11 +37,13 @@ module.exports = function downloader(urlList, dirName, cb) {
 		console.log("URL is : ", url);
 		ws = fs.createWriteStream(dirName + path.sep + filename, opts);
 		ws.on('error', function(err) {
-			console.log("Got Error : ", err);
+			errStream.write("Got Err : ", err + "\n");
+			//console.log("Got Error : ", err);
 			_cb({file : filename, url : url, error : err},null, cb);
 		});
 		ws.on('close', function() {
-			console.log("__FINISHED WRITING " + filename + "__");
+			successStream.write("__FINISHED WRITING " + filename + "__\n");
+			//console.log("__FINISHED WRITING " + filename + "__");
 			_cb(null, filename, cb);
 		});
 
@@ -44,10 +53,9 @@ module.exports = function downloader(urlList, dirName, cb) {
 		if (err) {
 			cb(err, null);
 		} else {
-			finished.push(filename);
 			console.log("Got Callback that " + filename + " is finished!!!!");
-			console.log(urlList.length - finished.length + " left to download");
-			if (urlList.length === finished.length) {
+			console.log((finCount -= 1) + " images left to download");
+			if (finCount === 0) {
 				cb(null, 'dumb da dumb dumb dum!!!!');
 			}
 		}
