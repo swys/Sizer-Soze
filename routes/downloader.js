@@ -8,56 +8,59 @@
 	}),
 	successStream = watercolor({
 		color : 'green'
-	}),
-	fileCount = 0;
-	
-// TODO :
-// Need to add a directory for every site queried
-// Files are named as generic file_1 file_2, probably want
-// to convert the original path into a valid file name
+	});
 
-module.exports = function downloader(urlList, dirName, cb) {
+module.exports = function downloader(scrape) {
 	var opts = {
 			flags: 'w',
 			encoding: null,
 			mode: 0666
-		},
-		finCount = urlList.length;
+		};
+	scrape.finCount = scrape.imageURLs.length;
+	scrape._cb = _cb;
+	scrape.imgFileNames = [];
+	scrape.errImgFiles = [];
+	scrape.fileCount = 0;
 
-	urlList.forEach(function(url) {
-		download(url, _cb);
+	scrape.imageURLs.forEach(function(url) {
+		download(url, scrape);
 	});
 	
-	function download(url, _cb) {
+	function download(url, scrape) {
 		var fileType = path.extname(url),
-			pathName = urlFormat.parse(url),
-			filename = 'file_' + (fileCount += 1) + '(' + path.basename(url, fileType) + ')' + fileType,
-			ws;
+			filename = 'image_' + (scrape.fileCount += 1) + '(' + path.basename(url, fileType) + ')' + fileType,
+			fullPath = path.join(scrape.dirName, filename);
 
 		console.log("URL is : ", url);
-		ws = fs.createWriteStream(dirName + path.sep + filename, opts);
+		ws = fs.createWriteStream(fullPath, opts);
+
 		ws.on('error', function(err) {
 			errStream.write("Got Err : ", err + "\n");
-			//console.log("Got Error : ", err);
-			_cb({file : filename, url : url, error : err},null, cb);
+			scrape._cb({file : fullPath, url : url, error : err},null, scrape);
 		});
 		ws.on('close', function() {
 			successStream.write("__FINISHED WRITING " + filename + "__\n");
 			//console.log("__FINISHED WRITING " + filename + "__");
-			_cb(null, filename, cb);
+			scrape._cb(null, fullPath, scrape);
 		});
 
 		request.get(url).pipe(ws);
 	}
-	function _cb(err, filename, cb) {
+
+	errStream.pipe(process.stderr);
+	successStream.pipe(process.stdout);
+
+	function _cb(err, filename, scrape) {
 		if (err) {
-			cb(err, null);
+			scrape.errImgFiles.push(err);
+			scrape.finCount -= 1;
 		} else {
+			scrape.imgFileNames.push(filename);
 			console.log("Got Callback that " + filename + " is finished!!!!");
-			console.log((finCount -= 1) + " images left to download");
-			if (finCount === 0) {
-				cb(null, 'dumb da dumb dumb dum!!!!');
-			}
+			console.log((scrape.finCount -= 1) + " images left to download");
+		}
+		if (scrape.finCount === 0) {
+			scrape.downloadImgsCB(scrape);
 		}
 	}
 };
