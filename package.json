@@ -8,9 +8,9 @@
   "dependencies": {
     "express": "3.4.0",
     "jade": "*",
-    "image-size": "~0.1.5",
     "request": "~2.27.0",
     "cheerio": "~0.12.2",
-    "watercolor": "0.0.2"
+    "watercolor": "0.0.2",
+    "imagesize": "~1.0.0"
   }
 }

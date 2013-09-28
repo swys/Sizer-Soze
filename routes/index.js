@@ -1,5 +1,5 @@
-var imgSize = require('image-size'),
-    request = require('request'),
+var request = require('request'),
+    getDimensions = require('./getDimensions.js'),
     fs = require('fs'),
     $ = require('cheerio'),
     path = require('path'),
@@ -21,6 +21,8 @@ exports.index = function indexHandle(req, res) {
             hasHTML : hasHTML,
             downloadImgs : downloadImgs,
             downloadImgsCB : downloadImgsCB,
+            imgDimensions : imgDimensions,
+            dimensions : {},
             imageURLs : []
         };
 
@@ -65,16 +67,26 @@ exports.index = function indexHandle(req, res) {
 
     function downloadImgsCB(scrape) {
         console.log("The " + scrape.imageURLs.length + " Files you requsted to download have finished!!!!");
+        scrape.imgDimensions(scrape, imgDimensionsCB);
+    }
+
+    function imgDimensions(scrape, done) {
+        getDimensions(scrape);
+    }
+
+    function imgDimensionsCB(scrape) {
         scrape.res.json({
-            'Images Successfully Downloaded' : scrape.imgFileNames.length,
-            'Images Failed Download' : scrape.errImgFiles.length,
-            imagesDownloaded : scrape.imgFileNames,
-            imagesFailedDownload : function() {
-                if (scrape.errImgFiles.length === 0) {
-                    return "All images downloaded successfully!!!!"
-                } else {
-                    return scrape.errImgFiles;
-                }
+            'This Domain had this many images ' : scrape.imageURLs,
+            'I was able to download this many images' : scrape.imgFileNames.length,
+            'I was unable to download this many images' : scrape.errImgFiles.length,
+            'I was able to get the dimensions of this many images' : Object.keys(scrape.dimensions).length,
+            AllDimensions : function() {
+                return Object.keys(scrape.dimensions).forEach(function(img) {
+                    return {
+                        width : scrape.dimensions[img].width,
+                        height : scrape.dimensions[img].height
+                    };
+                });
             }
         });
     }
@@ -85,18 +97,4 @@ function hasProtocol(domain, href) {
         return domain + href;
     }
     return href;
-}
-
-function hasDimensions(err, dim) {
-    if (err) {
-        res.json(err);
-    } else {
-        res.json({
-            filename : file,
-            dimensions : {
-                width : dim.width,
-                height : dim.height
-            }
-        });
-    }
 }

@@ -17,7 +17,7 @@ module.exports = function downloader(scrape) {
 			mode: 0666
 		};
 	scrape.finCount = scrape.imageURLs.length;
-	scrape._cb = _cb;
+	scrape._downloadcb = _cb;
 	scrape.imgFileNames = [];
 	scrape.errImgFiles = [];
 	scrape.fileCount = 0;
@@ -36,12 +36,12 @@ module.exports = function downloader(scrape) {
 
 		ws.on('error', function(err) {
 			errStream.write("Got Err : ", err + "\n");
-			scrape._cb({file : fullPath, url : url, error : err},null, scrape);
+			scrape._downloadcb({file : fullPath, url : url, error : err},null, scrape);
 		});
 		ws.on('close', function() {
 			successStream.write("__FINISHED WRITING " + filename + "__\n");
 			//console.log("__FINISHED WRITING " + filename + "__");
-			scrape._cb(null, fullPath, scrape);
+			scrape._downloadcb(null, fullPath, scrape);
 		});
 
 		request.get(url).pipe(ws);
