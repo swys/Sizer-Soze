@@ -7,7 +7,7 @@ var request = require('request'),
     downloader = require('./downloader.js');
 
 exports.index = function indexHandle(req, res) {
-    var domain = 'http://cnn.com',
+    var domain = 'http://amazon.com',
         dirParts = [process.cwd(), 'public', 'images'],
         downloadDir = dirParts.join(path.sep),
         host = url.parse(domain),
@@ -38,9 +38,11 @@ exports.index = function indexHandle(req, res) {
                 imageURLs = [];
             parsedHTML('img').map(function(i, link) {
                 var href = $(link).attr('src');
-                href = hasProtocol(scrape.domain, href);
-                if (scrape.imageURLs.indexOf(href) === -1) {
-                    scrape.imageURLs.push(href);
+                if (href) {
+                    href = hasProtocol(scrape.domain, href);
+                    if (scrape.imageURLs.indexOf(href) === -1) {
+                        scrape.imageURLs.push(href);
+                    }
                 }
             });
             scrape.getDimensions(scrape, getDimensionsCB);
