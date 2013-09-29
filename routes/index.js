@@ -7,7 +7,7 @@ var request = require('request'),
     downloader = require('./downloader.js');
 
 exports.index = function indexHandle(req, res) {
-    var domain = 'http://amazon.com',
+    var domain = 'http://cnn.com',
         dirParts = [process.cwd(), 'public', 'images'],
         downloadDir = dirParts.join(path.sep),
         host = url.parse(domain),
@@ -52,9 +52,11 @@ exports.index = function indexHandle(req, res) {
 };
 
 function getDimensionsCB(scrape) {
+    console.dir(scrape.dimensions);
     scrape.res.json({
+        domain : scrape.domain,
         'This Domain had this many images' : scrape.imageURLs.length,
-        'I was able to get the dimensions of this many images' : Object.keys(scrape.dimensions).length,
+        'I was able to get the dimensions of this many images' : Object.keys(scrape.dimensions.imgs).length,
         'I was not able to get the dimensions for this many images' : Object.keys(scrape.dimensions.err).length,
         'Here is a list of all the dimensions' : scrape.dimensions
     });
