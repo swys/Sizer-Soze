@@ -10,38 +10,39 @@
 		color : 'green'
 	});
 
-module.exports = function downloader(scrape) {
+module.exports = function downloader(rosebud, done) {
 	var opts = {
 			flags: 'w',
 			encoding: null,
 			mode: 0666
 		};
-	scrape.finCount = scrape.imageURLs.length;
-	scrape._downloadcb = _cb;
-	scrape.imgFileNames = [];
-	scrape.errImgFiles = [];
-	scrape.fileCount = 0;
+	rosebud.downloadImgsCB = done;
+	rosebud.finCount = rosebud.imageURLs.length;
+	rosebud._downloadcb = _cb;
+	rosebud.imgFileNames = [];
+	rosebud.errImgFiles = [];
+	rosebud.fileCount = 0;
 
-	scrape.imageURLs.forEach(function(url) {
-		download(url, scrape);
+	rosebud.imageURLs.forEach(function(url) {
+		download(url, rosebud);
 	});
 	
-	function download(url, scrape) {
+	function download(url, rosebud) {
 		var fileType = path.extname(url),
-			filename = 'image_' + (scrape.fileCount += 1) + '(' + path.basename(url, fileType) + ')' + fileType,
-			fullPath = path.join(scrape.dirName, filename);
+			filename = 'image_' + (rosebud.fileCount += 1) + '(' + path.basename(url, fileType) + ')' + fileType,
+			fullPath = path.join(rosebud.dirName, filename);
 
 		console.log("URL is : ", url);
 		ws = fs.createWriteStream(fullPath, opts);
 
 		ws.on('error', function(err) {
 			errStream.write("Got Err : ", err + "\n");
-			scrape._downloadcb({file : fullPath, url : url, error : err},null, scrape);
+			rosebud._downloadcb({file : fullPath, url : url, error : err},null, rosebud);
 		});
 		ws.on('close', function() {
 			successStream.write("__FINISHED WRITING " + filename + "__\n");
 			//console.log("__FINISHED WRITING " + filename + "__");
-			scrape._downloadcb(null, fullPath, scrape);
+			rosebud._downloadcb(null, fullPath, rosebud);
 		});
 
 		request.get(url).pipe(ws);
@@ -50,17 +51,17 @@ module.exports = function downloader(scrape) {
 	errStream.pipe(process.stderr);
 	successStream.pipe(process.stdout);
 
-	function _cb(err, filename, scrape) {
+	function _cb(err, filename, rosebud) {
 		if (err) {
-			scrape.errImgFiles.push(err);
-			scrape.finCount -= 1;
+			rosebud.errImgFiles.push(err);
+			rosebud.finCount -= 1;
 		} else {
-			scrape.imgFileNames.push(filename);
+			rosebud.imgFileNames.push(filename);
 			console.log("Got Callback that " + filename + " is finished!!!!");
-			console.log((scrape.finCount -= 1) + " images left to download");
+			console.log((rosebud.finCount -= 1) + " images left to download");
 		}
-		if (scrape.finCount === 0) {
-			scrape.downloadImgsCB(scrape);
+		if (rosebud.finCount === 0) {
+			rosebud.downloadImgsCB(rosebud);
 		}
 	}
 };

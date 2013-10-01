@@ -1,58 +1,71 @@
 var imagesize = require('imagesize'),
 	http = require('http'),
+	https = require('https'),
+	urlFormat = require('url'),
 	watercolor = require('watercolor'),
-	successTxt = watercolor({
-		color : 'green'
-	}),
-	infoTxt = watercolor({
-		color : 'warn'
-	}),
 	errTxt = watercolor({
 		color : 'red'
 	});
+// 	protocol = (function() {
+//     return function(tst) {
+//       if (tst === 'reg') {
+//         return http;
+//       } else {
+//         return os;
+//       }
+//     };
+// }());
 
-successTxt.setMaxListeners(0);
-errTxt.setMaxListeners(0);
-infoTxt.setMaxListeners(0);
-module.exports = function getDimensions(scrape, done) {
-	scrape.dimensions.err = {};
-	scrape.dimensions.imgs = {};
-	scrape.dimensions.done = done;
-	scrape.dimensions.finCount = scrape.imageURLs.length;
+errTxt.pipe(process.stdout);
 
-	scrape.imageURLs.forEach(function(url) {
-		http.get(url, function httpRequestCB(res) {
+module.exports = function getDimensions(rosebud, done) {
+	rosebud.dimensions.err = {};
+	rosebud.dimensions.imgs = {};
+	rosebud.dimensions.done = done;
+	rosebud.dimensions.finCount = rosebud.imageURLs.length;
+
+	rosebud.imageURLs.forEach(function(url) {
+		var protocol = urlFormat.format(urlFormat.parse(url).protocol);
+
+		getProtocol(protocol).get(url, function httpRequestCB(res) {
 			var headers = res.headers;
-			imagesize(res, hasDimensions.bind(null, scrape, url, headers));
+			imagesize(res, hasDimensions.bind(null, rosebud, url, headers));
 		}).on('error', function httpRequestErr(err) {
-			console.dir(err);
-			scrape.dimensions.err[url] = {
+			errTxt.write(toJSON(err) + "\n");
+			rosebud.dimensions.err[url] = {
 				url : url,
 				error : err
 			};
 		});
 	});
 
-	function hasDimensions(scrape, url, headers, err, result) {
+
+
+
+	function hasDimensions(rosebud, url, headers, err, result) {
 		if (err) {
 			console.dir(err);
-			scrape.dimensions.finCount -= 1;
-			scrape.dimensions.err[url] = {
+			rosebud.dimensions.finCount -= 1;
+			rosebud.dimensions.err[url] = {
 				url : url,
 				headers : headers,
 				error : err
 			};
 		} else {
-			scrape.dimensions.finCount -= 1;
+			rosebud.dimensions.finCount -= 1;
 			result.byteCount = headers['content-length'];
-			scrape.dimensions.imgs[url] = result;
+			rosebud.dimensions.imgs[url] = result;
 		}
-		if (scrape.dimensions.finCount === 0) {
-			scrape.dimensions.done(scrape);
+		if (rosebud.dimensions.finCount === 0) {
+			rosebud.dimensions.done(rosebud);
 		}
 	}
 };
 
 function toJSON(o) {
 	return JSON.stringify(o, null, 4);
+}
+
+function getProtocol(protocol) {
+	return (protocol === 'http' ? http : https);
 }
