@@ -1,5 +1,7 @@
-var $ = require('cherrio'),
-	request = require('request');
+var $ = require('cheerio'),
+	request = require('request'),
+	url = require('url'),
+	path = require('path');
 
 
 function getHTML(rosebud, done) {
@@ -27,10 +29,8 @@ function hasHTML(rosebud, err, response, html) {
 }
 
 function hasProtocol(domain, href) {
-	if (href.substr(0,1) !== 'h') {
-		return domain + href;
-	}
-	return href;
+	var uri = url.format(url.parse(href).protocol);
+	return (uri === '' ? domain + path.sep + href : href);
 }
 
 module.exports = {

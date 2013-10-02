@@ -14,9 +14,16 @@ rosebud['downloadImgsCB'] = function(rosebud) {
 	console.dir(rosebud.dimensions);
 };
 
-fs.mkdirSync(rosebud.dirName);
-downloader(rosebud, rosebud.downloadImgsCB);
-getImgDimensions(rosebud);
+fs.mkdir(rosebud.dirName, mkdirCB);
+
+function mkdirCB(err, ok) {
+	if (err && err.code !== 'EEXIST') {
+		console.dir(err.code);
+	} else {
+		downloader(rosebud, rosebud.downloadImgsCB);
+		getImgDimensions(rosebud);
+	}
+}
 
 function getImgDimensions(rosebud) {
 	getDimensions(rosebud, rosebud['downloadImgsCB']);

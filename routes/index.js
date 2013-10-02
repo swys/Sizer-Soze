@@ -37,11 +37,11 @@ function createDir(rosebud) {
     fs.mkdir(rosebud.dirName, rosebud.createDirCB.bind(null, rosebud));
 }
 
-function createDirCB(rosebud, err) {
-    if (err) {
-        rosebud.res.json(err);
+function createDirCB(rosebud, err, ok) {
+    if (err && err.code !== 'EEXIST') {
+        console.dir(err.code);
     } else {
-        console.log("Created Directory!!!!");
+        console.log("Directory " + (err === undefined ? "Created!!!!" : "already exists!!!!"));
         rosebud.getHTML(rosebud, getHTMLCB);
     }
 }
@@ -49,6 +49,7 @@ function createDirCB(rosebud, err) {
 function getHTMLCB(rosebud) {
     console.log("Finished Scraping!!!!");
     rosebud.downloadImgs(rosebud, downloadImgsCB);
+    rosebud.getDimensions(rosebud, rosebud.getDimensionsCB);
 }
 
 function downloadImgs(rosebud) {
@@ -61,7 +62,7 @@ function downloadImgsCB(rosebud) {
 
 
 function getDimensionsCB(rosebud) {
-    console.dir(rosebud.dimensions);
+    console.log("Finished Getting Dimensions!!!!");
     rosebud.res.json({
         domain : rosebud.domain,
         'This Domain had this many images' : rosebud.imageURLs.length,

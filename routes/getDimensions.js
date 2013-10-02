@@ -26,7 +26,9 @@ module.exports = function getDimensions(rosebud, done) {
 
 	rosebud.imageURLs.forEach(function(url) {
 		var protocol = urlFormat.format(urlFormat.parse(url).protocol);
+		protocol = protocol.substr(0,protocol.length - 1);
 
+		console.log("Protocol is : " + protocol);
 		getProtocol(protocol).get(url, function httpRequestCB(res) {
 			var headers = res.headers;
 			imagesize(res, hasDimensions.bind(null, rosebud, url, headers));
